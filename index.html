@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>EA Browser</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { display: flex; flex-direction: column; height: 100vh; background: #0f172a; color: #f8fafc; overflow: hidden; }
+
+    /* Top Titlebar & Tabs */
+    #titlebar {
+      display: flex; align-items: center; background: #0f172a; height: 40px; padding: 0 10px;
+      -webkit-app-region: drag; user-select: none; border-bottom: 1px solid #1e293b;
+    }
+    .tab-container { display: flex; align-items: center; gap: 4px; flex: 1; -webkit-app-region: no-drag; }
+    .tab {
+      display: flex; align-items: center; gap: 8px; background: #1e293b; color: #94a3b8; padding: 6px 16px;
+      border-radius: 8px 8px 0 0; font-size: 13px; cursor: pointer; max-width: 200px;
+    }
+    .tab.active { background: #334155; color: #ffffff; font-weight: 500; }
+    .tab-close { font-size: 12px; border-radius: 50%; padding: 2px 4px; }
+    .tab-close:hover { background: #475569; color: white; }
+    .add-tab-btn { background: transparent; color: #94a3b8; border: none; font-size: 18px; cursor: pointer; padding: 4px 8px; }
+    .add-tab-btn:hover { color: white; }
+
+    /* Header Actions (Ask EA & Neo Learn at top right like Ask Gemini) */
+    .top-actions { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; margin-left: auto; }
+    .ask-ea-btn {
+      background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;
+      padding: 5px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px;
+      display: flex; align-items: center; gap: 6px; border: 1px solid #34d399;
+    }
+    .ask-ea-btn:hover { background: #059669; }
+    .neo-learn-btn {
+      background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none;
+      padding: 5px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px;
+      border: 1px solid #60a5fa;
+    }
+    .neo-learn-btn:hover { background: #1d4ed8; }
+
+    /* Window Controls */
+    .win-controls { display: flex; align-items: center; gap: 6px; -webkit-app-region: no-drag; margin-left: 10px; }
+    .win-btn { background: transparent; border: none; color: #94a3b8; width: 28px; height: 28px; font-size: 14px; cursor: pointer; }
+    .win-btn:hover { color: white; background: #334155; border-radius: 4px; }
+    .win-btn.close:hover { background: #ef4444; }
+
+    /* Main Navigation Toolbar */
+    #toolbar {
+      display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+    .nav-btn { background: transparent; color: #cbd5e1; border: none; padding: 6px 10px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+    .nav-btn:hover { background: #334155; color: white; }
+    
+    input[type="text"]#url-bar {
+      flex: 1; padding: 8px 16px; border-radius: 24px; border: 1px solid #475569;
+      background: #0f172a; color: #f8fafc; dir: ltr; font-size: 14px; outline: none;
+    }
+    input[type="text"]#url-bar:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+    /* Main Container & Sidebar */
+    #main-container { display: flex; flex: 1; width: 100%; height: calc(100vh - 86px); position: relative; }
+    #browser-view { flex: 1; height: 100%; position: relative; }
+    webview { width: 100%; height: 100%; border: none; }
+
+    /* Sidebar Ask EA Chat Drawer */
+    #sidebar {
+      width: 360px; height: 100%; background: #1e293b; border-right: 1px solid #334155;
+      display: flex; flex-direction: column; position: absolute; right: 0; top: 0; z-index: 100;
+      box-shadow: -4px 0 15px rgba(0,0,0,0.5); transition: transform 0.3s ease;
+    }
+    #sidebar.hidden { transform: translateX(100%); display: none; }
+    
+    .sidebar-header { padding: 14px; background: #0f172a; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    .sidebar-title { font-weight: bold; color: #10b981; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+    .close-btn { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
+
+    .sidebar-content { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; max-width: 85%; }
+    .chat-msg.ea { background: #059669; color: white; align-self: flex-start; border-bottom-left-radius: 2px; }
+    .chat-msg.user { background: #2563eb; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+
+    .sidebar-input { padding: 12px; border-top: 1px solid #334155; display: flex; gap: 8px; background: #0f172a; }
+    .sidebar-input input { flex: 1; padding: 8px 12px; border-radius: 20px; border: 1px solid #475569; background: #1e293b; color: white; font-size: 13px; outline: none; }
+    .sidebar-input button { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+
+    /* Floating Customization Button (Pencil Icon like Chrome Homepage) */
+    #bg-customize-btn {
+      position: absolute; bottom: 20px; right: 20px; width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(30, 41, 59, 0.85); color: white; border: 1px solid #475569;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 50; transition: 0.2s;
+    }
+    #bg-customize-btn:hover { background: #2563eb; transform: scale(1.05); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Title Bar with Tabs & Header Buttons -->
+  <div id="titlebar">
+    <div class="tab-container">
+      <div class="tab active" onclick="switchTab('home')">
+        <span>🌐 EA Browser</span>
+      </div>
+      <div class="tab" onclick="openNeoLearn()">
+        <span>🎓 Neo Learn</span>
+      </div>
+      <button class="add-tab-btn" onclick="openNewTab()">+</button>
+    </div>
+
+    <div class="top-actions">
+      <button class="neo-learn-btn" onclick="openNeoLearn()">✦ Neo Learn</button>
+      <button class="ask-ea-btn" onclick="toggleSidebar()">✨ Ask EA</button>
+    </div>
+
+    <div class="win-controls">
+      <button class="win-btn" onclick="window.close()">—</button>
+      <button class="win-btn" onclick="window.close()">❏</button>
+      <button class="win-btn close" onclick="window.close()">✕</button>
+    </div>
+  </div>
+
+  <!-- Browser Navigation Bar -->
+  <div id="toolbar">
+    <button class="nav-btn" onclick="goBack()" title="رجوع">◄</button>
+    <button class="nav-btn" onclick="goForward()" title="إلى الأمام">►</button>
+    <button class="nav-btn" onclick="reload()" title="إعادة تحميل">↻</button>
+    <button class="nav-btn" onclick="goHome()" title="الصفحة الرئيسية">🏠</button>
+
+    <input type="text" id="url-bar" placeholder="أدخل الرابط أو ابحث في Google..." onkeypress="handleKey(event)">
+    
+    <button class="nav-btn" onclick="navigate()">➔</button>
+  </div>
+
+  <!-- Main View Area -->
+  <div id="main-container">
+    <div id="browser-view">
+      <!-- Default home view loading google with personalized tabs & Neo Learn integrated -->
+      <webview id="wv" src="https://www.google.com" partition="persist:ea_session"></webview>
+    </div>
+
+    <!-- Background Customize Floating Pencil Button (Exact Google Chrome style) -->
+    <button id="bg-customize-btn" onclick="changeBackground()" title="تخصيص خلفية الصفحة">
+      ✏️
+    </button>
+
+    <!-- Ask EA AI Sidebar Drawer -->
+    <div id="sidebar" class="hidden">
+      <div class="sidebar-header">
+        <span class="sidebar-title">✨ مساعد Ask EA</span>
+        <button class="close-btn" onclick="toggleSidebar()">✕</button>
+      </div>
+      
+      <div class="sidebar-content" id="chat-box">
+        <div class="chat-msg ea">أهلاً بك في متصفح EA Browser! كيف يمكنني مساعدتك في البحث أو الدراسة اليوم؟</div>
+      </div>
+      
+      <div class="sidebar-input">
+        <input type="text" id="ea-input" placeholder="اسأل Ask EA أي شيء..." onkeypress="handleEaKey(event)">
+        <button onclick="sendEaMessage()">إرسال</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const wv = document.getElementById('wv');
+    const urlBar = document.getElementById('url-bar');
+    const sidebar = document.getElementById('sidebar');
+    const chatBox = document.getElementById('chat-box');
+    const eaInput = document.getElementById('ea-input');
+
+    wv.addEventListener('did-finish-load', () => {
+      urlBar.value = wv.getURL();
+    });
+
+    function navigate() {
+      let val = urlBar.value.trim();
+      if (!val) return;
+      if (!val.startsWith('http://') && !val.startsWith('https://')) {
+        val = 'https://www.google.com/search?q=' + encodeURIComponent(val);
+      }
+      wv.src = val;
+    }
+
+    function handleKey(e) { if (e.key === 'Enter') navigate(); }
+    function goBack() { if (wv.canGoBack()) wv.goBack(); }
+    function goForward() { if (wv.canGoForward()) wv.goForward(); }
+    function reload() { wv.reload(); }
+    function goHome() { wv.src = 'https://www.google.com'; }
+
+    // Direct Integration for Neo Learn Link requested by User
+    function openNeoLearn() {
+      wv.src = 'https://ea692738-dotcom.github.io/Eyad/';
+    }
+
+    function openNewTab() {
+      wv.src = 'https://www.google.com';
+    }
+
+    function toggleSidebar() {
+      if (sidebar.classList.contains('hidden')) {
+        sidebar.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('hidden');
+      }
+    }
+
+    function sendEaMessage() {
+      const txt = eaInput.value.trim();
+      if (!txt) return;
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'chat-msg user';
+      userMsg.innerText = txt;
+      chatBox.appendChild(userMsg);
+
+      eaInput.value = '';
+
+      setTimeout(() => {
+        const eaMsg = document.createElement('div');
+        eaMsg.className = 'chat-msg ea';
+        eaMsg.innerText = 'أنا مساعدك الذكي Ask EA 🤖: جارٍ تحليل استفسارك حول (' + txt + ')';
+        chatBox.appendChild(eaMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }, 500);
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleEaKey(e) { if (e.key === 'Enter') sendEaMessage(); }
+
+    function changeBackground() {
+      const bgUrl = prompt("أدخل رابط الصورة لتغيير خلفية المتصفح:");
+      if (bgUrl) {
+        wv.executeJavaScript(`document.body.style.backgroundImage = "url('${bgUrl}')"; document.body.style.backgroundSize = "cover";`);
+      }
+    }
+  </script>
+</body>
+</html>
