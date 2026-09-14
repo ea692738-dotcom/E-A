@@ -1,15 +1,11 @@
 {
   "name": "ea-browser",
   "version": "1.0.0",
-  "description": "EA Browser with Google UI, Tabs, Neo Learn & Ask EA",
+  "description": "EA Browser - Dark Mauve Edition",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win nsis"
-  },
-  "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.0"
   },
   "build": {
     "appId": "com.ea.browser",
@@ -24,5 +20,9 @@
       "createStartMenuShortcut": true,
       "shortcutName": "EA Browser"
     }
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0"
   }
 }

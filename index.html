@@ -4,237 +4,375 @@
   <meta charset="UTF-8">
   <title>EA Browser</title>
   <style>
+    :root {
+      --bg-dark: #0d0a14;
+      --bg-mauve: #1a1226;
+      --mauve-accent: #7c3aed;
+      --mauve-light: #a78bfa;
+      --mauve-card: #251838;
+      --text-main: #f3f0ff;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { display: flex; flex-direction: column; height: 100vh; background: #0f172a; color: #f8fafc; overflow: hidden; }
+    body { display: flex; flex-direction: column; height: 100vh; background: var(--bg-dark); color: var(--text-main); overflow: hidden; }
 
-    /* Top Titlebar & Tabs */
+    /* Top Drag Bar & Tabs */
     #titlebar {
-      display: flex; align-items: center; background: #0f172a; height: 40px; padding: 0 10px;
-      -webkit-app-region: drag; user-select: none; border-bottom: 1px solid #1e293b;
+      display: flex; align-items: center; background: #08050e; height: 42px; padding: 0 10px;
+      -webkit-app-region: drag; user-select: none; border-bottom: 1px solid #2d1f42;
     }
-    .tab-container { display: flex; align-items: center; gap: 4px; flex: 1; -webkit-app-region: no-drag; }
+    .tab-container { display: flex; align-items: center; gap: 6px; flex: 1; -webkit-app-region: no-drag; overflow-x: auto; }
     .tab {
-      display: flex; align-items: center; gap: 8px; background: #1e293b; color: #94a3b8; padding: 6px 16px;
-      border-radius: 8px 8px 0 0; font-size: 13px; cursor: pointer; max-width: 200px;
+      display: flex; align-items: center; gap: 8px; background: var(--bg-mauve); color: #c4b5fd; padding: 7px 16px;
+      border-radius: 10px 10px 0 0; font-size: 13px; cursor: pointer; min-width: 140px; max-width: 220px;
+      border: 1px solid #3b2756; border-bottom: none; transition: 0.2s;
     }
-    .tab.active { background: #334155; color: #ffffff; font-weight: 500; }
-    .tab-close { font-size: 12px; border-radius: 50%; padding: 2px 4px; }
-    .tab-close:hover { background: #475569; color: white; }
-    .add-tab-btn { background: transparent; color: #94a3b8; border: none; font-size: 18px; cursor: pointer; padding: 4px 8px; }
-    .add-tab-btn:hover { color: white; }
+    .tab.active { background: var(--mauve-card); color: #ffffff; font-weight: bold; border-color: var(--mauve-accent); }
+    .tab-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tab-close { font-size: 13px; border-radius: 50%; padding: 2px 6px; color: #a78bfa; }
+    .tab-close:hover { background: #4c1d95; color: white; }
+    .add-tab-btn { background: var(--bg-mauve); color: var(--mauve-light); border: 1px solid #3b2756; font-size: 16px; cursor: pointer; padding: 4px 10px; border-radius: 8px; }
+    .add-tab-btn:hover { background: var(--mauve-accent); color: white; }
 
-    /* Header Actions (Ask EA & Neo Learn at top right like Ask Gemini) */
-    .top-actions { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; margin-left: auto; }
-    .ask-ea-btn {
-      background: linear-gradient(135deg, #059669, #10b981); color: white; border: none;
-      padding: 5px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px;
-      display: flex; align-items: center; gap: 6px; border: 1px solid #34d399;
+    /* Top Action Shortcuts (Neo Learn, Ask EA, iSchool) */
+    .top-actions { display: flex; align-items: center; gap: 8px; -webkit-app-region: no-drag; margin-left: 12px; }
+    .action-btn {
+      color: white; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s;
     }
-    .ask-ea-btn:hover { background: #059669; }
-    .neo-learn-btn {
-      background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none;
-      padding: 5px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 13px;
-      border: 1px solid #60a5fa;
-    }
-    .neo-learn-btn:hover { background: #1d4ed8; }
+    .ask-ea-btn { background: linear-gradient(135deg, #6d28d9, #8b5cf6); box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
+    .ask-ea-btn:hover { background: #7c3aed; }
+    .neo-learn-btn { background: linear-gradient(135deg, #4c1d95, #6d28d9); border: 1px solid #a78bfa; }
+    .neo-learn-btn:hover { background: #5b21b6; }
+    .ischool-btn { background: linear-gradient(135deg, #251838, #4c1d95); border: 1px solid #7c3aed; }
+    .ischool-btn:hover { background: #6d28d9; }
 
-    /* Window Controls */
-    .win-controls { display: flex; align-items: center; gap: 6px; -webkit-app-region: no-drag; margin-left: 10px; }
-    .win-btn { background: transparent; border: none; color: #94a3b8; width: 28px; height: 28px; font-size: 14px; cursor: pointer; }
-    .win-btn:hover { color: white; background: #334155; border-radius: 4px; }
-    .win-btn.close:hover { background: #ef4444; }
+    /* Window Control Buttons */
+    .win-controls { display: flex; align-items: center; gap: 4px; -webkit-app-region: no-drag; margin-left: 10px; }
+    .win-btn { background: transparent; border: none; color: var(--mauve-light); width: 30px; height: 30px; font-size: 14px; cursor: pointer; border-radius: 6px; }
+    .win-btn:hover { color: white; background: var(--mauve-card); }
+    .win-btn.close:hover { background: #dc2626; color: white; }
 
-    /* Main Navigation Toolbar */
+    /* Navigation Bar */
     #toolbar {
-      display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: #1e293b;
-      border-bottom: 1px solid #334155;
+      display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg-mauve);
+      border-bottom: 1px solid #2d1f42;
     }
-    .nav-btn { background: transparent; color: #cbd5e1; border: none; padding: 6px 10px; border-radius: 50%; cursor: pointer; font-size: 16px; }
-    .nav-btn:hover { background: #334155; color: white; }
+    .nav-btn { background: var(--mauve-card); color: var(--mauve-light); border: 1px solid #3b2756; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 15px; }
+    .nav-btn:hover { background: var(--mauve-accent); color: white; }
     
     input[type="text"]#url-bar {
-      flex: 1; padding: 8px 16px; border-radius: 24px; border: 1px solid #475569;
-      background: #0f172a; color: #f8fafc; dir: ltr; font-size: 14px; outline: none;
+      flex: 1; padding: 9px 18px; border-radius: 24px; border: 1px solid #4c1d95;
+      background: var(--bg-dark); color: #ffffff; dir: ltr; font-size: 14px; outline: none;
     }
-    input[type="text"]#url-bar:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
 
-    /* Main Container & Sidebar */
-    #main-container { display: flex; flex: 1; width: 100%; height: calc(100vh - 86px); position: relative; }
-    #browser-view { flex: 1; height: 100%; position: relative; }
+    /* Content Area */
+    #main-container { display: flex; flex: 1; width: 100%; height: calc(100vh - 90px); position: relative; }
+    #views-holder { flex: 1; height: 100%; position: relative; }
+    .view-frame { width: 100%; height: 100%; display: none; }
+    .view-frame.active { display: block; }
     webview { width: 100%; height: 100%; border: none; }
 
-    /* Sidebar Ask EA Chat Drawer */
-    #sidebar {
-      width: 360px; height: 100%; background: #1e293b; border-right: 1px solid #334155;
-      display: flex; flex-direction: column; position: absolute; right: 0; top: 0; z-index: 100;
-      box-shadow: -4px 0 15px rgba(0,0,0,0.5); transition: transform 0.3s ease;
+    /* EA Homepage */
+    .custom-home {
+      width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background-size: cover; background-position: center; position: relative; transition: background 0.5s ease;
     }
-    #sidebar.hidden { transform: translateX(100%); display: none; }
+    .home-overlay { position: absolute; inset: 0; background: rgba(13, 10, 20, 0.55); backdrop-filter: blur(4px); }
+    .home-content { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; max-width: 680px; padding: 20px; }
     
-    .sidebar-header { padding: 14px; background: #0f172a; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-    .sidebar-title { font-weight: bold; color: #10b981; font-size: 15px; display: flex; align-items: center; gap: 6px; }
-    .close-btn { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-
-    .sidebar-content { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-    .chat-msg { padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; max-width: 85%; }
-    .chat-msg.ea { background: #059669; color: white; align-self: flex-start; border-bottom-left-radius: 2px; }
-    .chat-msg.user { background: #2563eb; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-
-    .sidebar-input { padding: 12px; border-top: 1px solid #334155; display: flex; gap: 8px; background: #0f172a; }
-    .sidebar-input input { flex: 1; padding: 8px 12px; border-radius: 20px; border: 1px solid #475569; background: #1e293b; color: white; font-size: 13px; outline: none; }
-    .sidebar-input button { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-
-    /* Floating Customization Button (Pencil Icon like Chrome Homepage) */
-    #bg-customize-btn {
-      position: absolute; bottom: 20px; right: 20px; width: 42px; height: 42px; border-radius: 50%;
-      background: rgba(30, 41, 59, 0.85); color: white; border: 1px solid #475569;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3); backdrop-filter: blur(8px); z-index: 50; transition: 0.2s;
+    .ea-logo { font-size: 64px; font-weight: 900; letter-spacing: 4px; background: linear-gradient(135deg, #a78bfa, #c4b5fd, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .home-search-box {
+      width: 100%; display: flex; align-items: center; background: rgba(26, 18, 38, 0.85); border: 2px solid #5b21b6;
+      border-radius: 30px; padding: 6px 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-    #bg-customize-btn:hover { background: #2563eb; transform: scale(1.05); }
+    .home-search-box input { flex: 1; background: transparent; border: none; padding: 10px 14px; color: white; font-size: 16px; outline: none; }
+    .home-search-box button { background: var(--mauve-accent); color: white; border: none; padding: 10px 22px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+
+    .shortcuts { display: flex; gap: 16px; margin-top: 10px; }
+    .shortcut-card {
+      display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(37, 24, 56, 0.85);
+      padding: 12px 16px; border-radius: 16px; border: 1px solid #4c1d95; min-width: 90px; cursor: pointer; transition: 0.2s;
+    }
+    .shortcut-card:hover { transform: translateY(-4px); background: var(--mauve-accent); }
+    .shortcut-icon { font-size: 22px; }
+    .shortcut-title { font-size: 12px; color: #ddd; }
+
+    /* Ocean Wallpapers Modal */
+    #bg-picker-modal {
+      display: none; position: absolute; bottom: 80px; right: 30px; background: var(--bg-mauve);
+      border: 2px solid var(--mauve-accent); border-radius: 18px; padding: 16px; width: 320px; z-index: 200;
+    }
+    #bg-picker-modal.show { display: block; }
+    .bg-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .bg-thumb { height: 70px; border-radius: 10px; background-size: cover; background-position: center; cursor: pointer; }
+
+    #bg-customize-btn {
+      position: absolute; bottom: 24px; right: 24px; width: 46px; height: 46px; border-radius: 50%;
+      background: rgba(255,255,255,0.92); color: #111; border: 1px solid #111;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 150;
+      padding: 9px; box-sizing: border-box; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    #bg-customize-btn svg { width: 24px; height: 24px; fill: none; stroke: #111; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    #bg-customize-btn:hover { background: #fff; transform: scale(1.04); }
+    #bg-customize-btn:active { transform: scale(0.97); }
+
+    /* Ask EA Sidebar */
+    #sidebar {
+      width: 360px; height: 100%; background: var(--bg-mauve); border-right: 2px solid #3b2756;
+      display: flex; flex-direction: column; position: absolute; right: 0; top: 0; z-index: 180;
+    }
+    #sidebar.hidden { display: none; }
+    .sidebar-header { padding: 14px; background: var(--bg-dark); border-bottom: 1px solid #2d1f42; display: flex; justify-content: space-between; }
+    .sidebar-content { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { padding: 10px 14px; border-radius: 12px; font-size: 13.5px; max-width: 85%; }
+    .chat-msg.ea { background: var(--mauve-card); color: white; border: 1px solid var(--mauve-accent); align-self: flex-start; }
+    .chat-msg.user { background: var(--mauve-accent); color: white; align-self: flex-end; }
+    .sidebar-input { padding: 12px; border-top: 1px solid #2d1f42; display: flex; gap: 8px; background: var(--bg-dark); }
+    .sidebar-input input { flex: 1; padding: 9px 14px; border-radius: 20px; border: 1px solid #4c1d95; background: var(--bg-mauve); color: white; outline: none; }
+    .sidebar-input button { background: var(--mauve-accent); color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <!-- Top Title Bar with Tabs & Header Buttons -->
   <div id="titlebar">
-    <div class="tab-container">
-      <div class="tab active" onclick="switchTab('home')">
-        <span>🌐 EA Browser</span>
-      </div>
-      <div class="tab" onclick="openNeoLearn()">
-        <span>🎓 Neo Learn</span>
-      </div>
-      <button class="add-tab-btn" onclick="openNewTab()">+</button>
-    </div>
+    <div class="tab-container" id="tab-list"></div>
+    <button class="add-tab-btn" onclick="createNewTab('https://ea692738-dotcom.github.io/Eyad/')" title="فتح تبويب جديد">+</button>
 
     <div class="top-actions">
-      <button class="neo-learn-btn" onclick="openNeoLearn()">✦ Neo Learn</button>
-      <button class="ask-ea-btn" onclick="toggleSidebar()">✨ Ask EA</button>
+      <button class="action-btn ischool-btn" onclick="createNewTab('https://ischool.org')">🏫 iSchool</button>
+      <button class="action-btn neo-learn-btn" onclick="openNeoLearnTab()">🎓 Neo Learn</button>
+      <button class="action-btn ask-ea-btn" onclick="toggleSidebar()">✨ Ask EA</button>
     </div>
 
     <div class="win-controls">
-      <button class="win-btn" onclick="window.close()">—</button>
-      <button class="win-btn" onclick="window.close()">❏</button>
-      <button class="win-btn close" onclick="window.close()">✕</button>
+      <button class="win-btn" onclick="minimizeWin()">—</button>
+      <button class="win-btn" onclick="maximizeWin()">❏</button>
+      <button class="win-btn close" onclick="closeWin()">✕</button>
     </div>
   </div>
 
-  <!-- Browser Navigation Bar -->
   <div id="toolbar">
-    <button class="nav-btn" onclick="goBack()" title="رجوع">◄</button>
-    <button class="nav-btn" onclick="goForward()" title="إلى الأمام">►</button>
-    <button class="nav-btn" onclick="reload()" title="إعادة تحميل">↻</button>
-    <button class="nav-btn" onclick="goHome()" title="الصفحة الرئيسية">🏠</button>
+    <button class="nav-btn" onclick="goBack()">◄</button>
+    <button class="nav-btn" onclick="goForward()">►</button>
+    <button class="nav-btn" onclick="reload()">↻</button>
+    <button class="nav-btn" onclick="goHome()">🏠</button>
 
     <input type="text" id="url-bar" placeholder="أدخل الرابط أو ابحث في Google..." onkeypress="handleKey(event)">
-    
     <button class="nav-btn" onclick="navigate()">➔</button>
   </div>
 
-  <!-- Main View Area -->
   <div id="main-container">
-    <div id="browser-view">
-      <!-- Default home view loading google with personalized tabs & Neo Learn integrated -->
-      <webview id="wv" src="https://www.google.com" partition="persist:ea_session"></webview>
-    </div>
+    <div id="views-holder"></div>
 
-    <!-- Background Customize Floating Pencil Button (Exact Google Chrome style) -->
-    <button id="bg-customize-btn" onclick="changeBackground()" title="تخصيص خلفية الصفحة">
-      ✏️
+    <button id="bg-customize-btn" onclick="toggleBgPicker()" aria-label="تغيير الخلفية" title="تغيير الخلفية">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 20l3.8-.9L19.3 7.6a2.2 2.2 0 0 0 0-3.1l-.8-.8a2.2 2.2 0 0 0-3.1 0L3.9 15.2 3 19l1 1z"/>
+        <path d="M13.8 5.2l5 5"/>
+        <path d="M3.9 15.2l5 5"/>
+      </svg>
     </button>
 
-    <!-- Ask EA AI Sidebar Drawer -->
+    <div id="bg-picker-modal">
+      <div style="font-size:14px; color:#a78bfa; margin-bottom:10px;">🌊 اختر خلفية البحر:</div>
+      <div class="bg-grid">
+        <div class="bg-thumb" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800')" onclick="setBg('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600')"></div>
+        <div class="bg-thumb" style="background-image: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800')" onclick="setBg('https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1600')"></div>
+        <div class="bg-thumb" style="background-image: url('https://images.unsplash.com/photo-1471922694854-ff24a5396580?w=800')" onclick="setBg('https://images.unsplash.com/photo-1471922694854-ff24a5396580?w=1600')"></div>
+        <div class="bg-thumb" style="background-image: url('https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800')" onclick="setBg('https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1600')"></div>
+      </div>
+    </div>
+
     <div id="sidebar" class="hidden">
       <div class="sidebar-header">
-        <span class="sidebar-title">✨ مساعد Ask EA</span>
-        <button class="close-btn" onclick="toggleSidebar()">✕</button>
+        <span>✨ مساعد Ask EA</span>
+        <button style="background:none; border:none; color:#a78bfa; cursor:pointer;" onclick="toggleSidebar()">✕</button>
       </div>
-      
       <div class="sidebar-content" id="chat-box">
-        <div class="chat-msg ea">أهلاً بك في متصفح EA Browser! كيف يمكنني مساعدتك في البحث أو الدراسة اليوم؟</div>
+        <div class="chat-msg ea">أهلاً بك يا إياد! أنا مساعدك الذكي Ask EA 🤖، كيف يمكنني مساعدتك؟</div>
       </div>
-      
       <div class="sidebar-input">
-        <input type="text" id="ea-input" placeholder="اسأل Ask EA أي شيء..." onkeypress="handleEaKey(event)">
+        <input type="text" id="ea-input" placeholder="اسأل Ask EA..." onkeypress="handleEaKey(event)">
         <button onclick="sendEaMessage()">إرسال</button>
       </div>
     </div>
   </div>
 
   <script>
-    const wv = document.getElementById('wv');
-    const urlBar = document.getElementById('url-bar');
-    const sidebar = document.getElementById('sidebar');
-    const chatBox = document.getElementById('chat-box');
-    const eaInput = document.getElementById('ea-input');
+    const { ipcRenderer } = require('electron');
 
-    wv.addEventListener('did-finish-load', () => {
-      urlBar.value = wv.getURL();
-    });
+    function minimizeWin() { ipcRenderer.send('win-minimize'); }
+    function maximizeWin() { ipcRenderer.send('win-maximize'); }
+    function closeWin() { ipcRenderer.send('win-close'); }
+
+    let tabs = [];
+    let activeTabId = null;
+    let tabCounter = 0;
+    let currentOceanBg = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600';
+
+    const tabList = document.getElementById('tab-list');
+    const viewsHolder = document.getElementById('views-holder');
+    const urlBar = document.getElementById('url-bar');
+
+    function createNewTab(url = 'home') {
+      tabCounter++;
+      const tabId = 'tab-' + tabCounter;
+
+      const tabEl = document.createElement('div');
+      tabEl.className = 'tab';
+      tabEl.id = 'tab-btn-' + tabId;
+      tabEl.onclick = () => switchTab(tabId);
+      
+      const tabTitle = document.createElement('span');
+      tabTitle.className = 'tab-title';
+      tabTitle.innerText = url === 'home' ? 'الصفحة الرئيسية' : (url.includes('Eyad') ? 'Neo Learn' : (url.includes('ischool') ? 'iSchool' : 'تبويب جديد'));
+
+      const tabClose = document.createElement('span');
+      tabClose.className = 'tab-close';
+      tabClose.innerText = '✕';
+      tabClose.onclick = (e) => { e.stopPropagation(); closeTab(tabId); };
+
+      tabEl.appendChild(tabTitle);
+      tabEl.appendChild(tabClose);
+      tabList.appendChild(tabEl);
+
+      const frameEl = document.createElement('div');
+      frameEl.className = 'view-frame';
+      frameEl.id = 'frame-' + tabId;
+
+      if (url === 'home') {
+        frameEl.innerHTML = renderHomeHtml();
+      } else {
+        const wv = document.createElement('webview');
+        wv.id = 'wv-' + tabId;
+        wv.src = url;
+        wv.setAttribute('partition', 'persist:ea_session');
+        wv.addEventListener('did-finish-load', () => {
+          if (activeTabId === tabId) urlBar.value = wv.getURL();
+          tabTitle.innerText = wv.getTitle() || 'صفحة الويب';
+        });
+        frameEl.appendChild(wv);
+      }
+
+      viewsHolder.appendChild(frameEl);
+      tabs.push({ id: tabId, url: url });
+      switchTab(tabId);
+    }
+
+    function switchTab(tabId) {
+      activeTabId = tabId;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view-frame').forEach(f => f.classList.remove('active'));
+
+      const activeBtn = document.getElementById('tab-btn-' + tabId);
+      const activeFrame = document.getElementById('frame-' + tabId);
+
+      if (activeBtn && activeFrame) {
+        activeBtn.classList.add('active');
+        activeFrame.classList.add('active');
+
+        const wv = activeFrame.querySelector('webview');
+        urlBar.value = wv ? wv.getURL() : '';
+      }
+    }
+
+    function closeTab(tabId) {
+      if (tabs.length <= 1) return;
+      document.getElementById('tab-btn-' + tabId)?.remove();
+      document.getElementById('frame-' + tabId)?.remove();
+      tabs = tabs.filter(t => t.id !== tabId);
+      if (activeTabId === tabId) switchTab(tabs[tabs.length - 1].id);
+    }
+
+    function openNeoLearnTab() { createNewTab('https://ea692738-dotcom.github.io/Eyad/'); }
+
+    function renderHomeHtml() {
+      return `
+        <div class="custom-home" id="home-bg-layer" style="background-image: url('${currentOceanBg}');">
+          <div class="home-overlay"></div>
+          <div class="home-content">
+            <div class="ea-logo">EA</div>
+            <div class="home-search-box">
+              <input type="text" id="home-input" placeholder="ابحث في Google أو أدخل رابطاً..." onkeypress="if(event.key==='Enter') executeHomeSearch()">
+              <button onclick="executeHomeSearch()">بحث</button>
+            </div>
+            <div class="shortcuts">
+              <div class="shortcut-card" onclick="createNewTab('https://ea692738-dotcom.github.io/Eyad/')">
+                <span class="shortcut-icon">🎓</span>
+                <span class="shortcut-title">Neo Learn</span>
+              </div>
+              <div class="shortcut-card" onclick="createNewTab('https://ischool.org')">
+                <span class="shortcut-icon">🏫</span>
+                <span class="shortcut-title">iSchool</span>
+              </div>
+              <div class="shortcut-card" onclick="createNewTab('https://www.google.com')">
+                <span class="shortcut-icon">🔍</span>
+                <span class="shortcut-title">Google</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function executeHomeSearch() {
+      const input = document.getElementById('home-input');
+      if (!input || !input.value.trim()) return;
+      let q = input.value.trim();
+      if (!q.startsWith('http')) q = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+      const activeFrame = document.getElementById('frame-' + activeTabId);
+      activeFrame.innerHTML = `<webview id="wv-${activeTabId}" src="${q}" partition="persist:ea_session"></webview>`;
+      urlBar.value = q;
+    }
 
     function navigate() {
       let val = urlBar.value.trim();
       if (!val) return;
-      if (!val.startsWith('http://') && !val.startsWith('https://')) {
-        val = 'https://www.google.com/search?q=' + encodeURIComponent(val);
-      }
-      wv.src = val;
+      if (!val.startsWith('http')) val = 'https://www.google.com/search?q=' + encodeURIComponent(val);
+      const activeFrame = document.getElementById('frame-' + activeTabId);
+      const wv = activeFrame.querySelector('webview');
+      if (wv) wv.src = val;
+      else activeFrame.innerHTML = `<webview id="wv-${activeTabId}" src="${val}" partition="persist:ea_session"></webview>`;
     }
 
     function handleKey(e) { if (e.key === 'Enter') navigate(); }
-    function goBack() { if (wv.canGoBack()) wv.goBack(); }
-    function goForward() { if (wv.canGoForward()) wv.goForward(); }
-    function reload() { wv.reload(); }
-    function goHome() { wv.src = 'https://www.google.com'; }
+    function goBack() { const wv = document.querySelector('#frame-' + activeTabId + ' webview'); if (wv && wv.canGoBack()) wv.goBack(); }
+    function goForward() { const wv = document.querySelector('#frame-' + activeTabId + ' webview'); if (wv && wv.canGoForward()) wv.goForward(); }
+    function reload() { const wv = document.querySelector('#frame-' + activeTabId + ' webview'); if (wv) wv.reload(); }
+    function goHome() { createNewTab('home'); }
 
-    // Direct Integration for Neo Learn Link requested by User
-    function openNeoLearn() {
-      wv.src = 'https://ea692738-dotcom.github.io/Eyad/';
+    function toggleBgPicker() { document.getElementById('bg-picker-modal').classList.toggle('show'); }
+    function setBg(imgUrl) {
+      currentOceanBg = imgUrl;
+      const bgLayer = document.getElementById('home-bg-layer');
+      if (bgLayer) bgLayer.style.backgroundImage = `url('${imgUrl}')`;
+      document.getElementById('bg-picker-modal').classList.remove('show');
     }
 
-    function openNewTab() {
-      wv.src = 'https://www.google.com';
-    }
-
-    function toggleSidebar() {
-      if (sidebar.classList.contains('hidden')) {
-        sidebar.classList.remove('hidden');
-      } else {
-        sidebar.classList.add('hidden');
-      }
-    }
-
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('hidden'); }
     function sendEaMessage() {
-      const txt = eaInput.value.trim();
+      const input = document.getElementById('ea-input');
+      const box = document.getElementById('chat-box');
+      const txt = input.value.trim();
       if (!txt) return;
 
-      const userMsg = document.createElement('div');
-      userMsg.className = 'chat-msg user';
-      userMsg.innerText = txt;
-      chatBox.appendChild(userMsg);
-
-      eaInput.value = '';
+      const userDiv = document.createElement('div');
+      userDiv.className = 'chat-msg user';
+      userDiv.innerText = txt;
+      box.appendChild(userDiv);
+      input.value = '';
 
       setTimeout(() => {
-        const eaMsg = document.createElement('div');
-        eaMsg.className = 'chat-msg ea';
-        eaMsg.innerText = 'أنا مساعدك الذكي Ask EA 🤖: جارٍ تحليل استفسارك حول (' + txt + ')';
-        chatBox.appendChild(eaMsg);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const eaDiv = document.createElement('div');
+        eaDiv.className = 'chat-msg ea';
+        eaDiv.innerText = 'أنا مساعدك EA 🤖: تم استلام طلبك واستجابته بنجاح!';
+        box.appendChild(eaDiv);
+        box.scrollTop = box.scrollHeight;
       }, 500);
-
-      chatBox.scrollTop = chatBox.scrollHeight;
     }
-
     function handleEaKey(e) { if (e.key === 'Enter') sendEaMessage(); }
 
-    function changeBackground() {
-      const bgUrl = prompt("أدخل رابط الصورة لتغيير خلفية المتصفح:");
-      if (bgUrl) {
-        wv.executeJavaScript(`document.body.style.backgroundImage = "url('${bgUrl}')"; document.body.style.backgroundSize = "cover";`);
-      }
-    }
+    openNeoLearnTab();
   </script>
 </body>
 </html>

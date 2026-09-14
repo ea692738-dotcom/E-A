@@ -1,12 +1,14 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
+let win;
+
 function createWindow() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1400,
     height: 900,
     title: "EA Browser",
-    frame: false, // Frame set to false for custom titlebar & tabs like Chrome / Brave
+    frame: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -16,6 +18,15 @@ function createWindow() {
 
   win.loadFile('index.html');
 }
+
+ipcMain.on('win-minimize', () => { if (win) win.minimize(); });
+ipcMain.on('win-maximize', () => {
+  if (win) {
+    if (win.isMaximized()) win.unmaximize();
+    else win.maximize();
+  }
+});
+ipcMain.on('win-close', () => { if (win) win.close(); });
 
 app.whenReady().then(createWindow);
 
